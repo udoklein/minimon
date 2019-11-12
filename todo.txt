@@ -1,0 +1,7 @@
+# TODO:
+#   fix unintended DTR toggle
+#   https://github.com/pyserial/pyserial/issues/124
+#
+#   currently I have no idea how to supress toggling DTR after opening the serial port
+#
+# add config file for defaults: e.g. like so: https://gist.github.com/drmalex07/9995807
