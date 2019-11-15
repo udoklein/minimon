@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 
 import serial
 import serial.tools.list_ports as list_ports
@@ -50,7 +50,6 @@ if ports:
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
                                  description="Simple serial port monitor")
-port_group = parser.add_mutually_exclusive_group()
 
 parser.add_argument("-V", "--version", action="store_true",
                     help="version")
@@ -58,6 +57,7 @@ parser.add_argument("-V", "--version", action="store_true",
 parser.add_argument("--license", action="store_true",
                     help="license")
 
+port_group = parser.add_mutually_exclusive_group()
 port_group.add_argument("-p", "--port", type=str, default=default_port.path,
                     help="port")
 
@@ -67,20 +67,22 @@ port_group.add_argument("-pp", "-P", "--PortPattern", type=str,
 parser.add_argument("-b", "--baudrate", type=int, default=default_baudrate,
                     help="baudrate")
 
-parser.add_argument("-l", "--list", action="store_true",
-                    help="list ports which have a hardware description")
+list_group = parser.add_mutually_exclusive_group()
+list_group.add_argument("-l", "--list", action="store_true",
+                        help="list ports that have a hardware description")
 
-parser.add_argument("-L", "--List", action="store_true",
-                    help="list all ports")
+list_group.add_argument("-L", "--List", action="store_true",
+                        help="list all ports")
 
 parser.add_argument("-x", "--hex", action="store_true",
                     help="hexdump mode")
 
-parser.add_argument("-t", "--timestamp", action="store_true",
-                    help="timestamp (UTC)")
+timestamp_group = parser.add_mutually_exclusive_group()
+timestamp_group.add_argument("-t", "--timestamp", action="store_true",
+                             help="timestamp (UTC)")
 
-parser.add_argument("-ts", "--short_timestamp", action="store_true",
-                    help="short timestamp (UTC)")
+timestamp_group.add_argument("-ts", "--short_timestamp", action="store_true",
+                             help="short timestamp (UTC)")
 
 parser.add_argument("-n", "--newline", choices=["pass", "cr", "lf", "crlf", "none"], default='pass',
                     help="newline handling, pass='do nothing', everything else: map newlines accordingly")

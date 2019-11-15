@@ -1,1 +1,2 @@
+2019 11 12 Version 1.0.1  made incompatible command line arguments mutually exclusive
 2019 11 12 Version 1.0.0  initial Version
