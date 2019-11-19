@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-VERSION = "1.0.1"
+VERSION = "1.1.0"
 
 import serial
 import serial.tools.list_ports as list_ports
@@ -74,8 +74,13 @@ list_group.add_argument("-l", "--list", action="store_true",
 list_group.add_argument("-L", "--List", action="store_true",
                         help="list all ports")
 
-parser.add_argument("-x", "--hex", action="store_true",
-                    help="hexdump mode")
+
+output_control_group = parser.add_mutually_exclusive_group()
+output_control_group.add_argument("-x", "--hex", action="store_true",
+                                  help="hexdump mode")
+output_control_group.add_argument("-r", "--remove", action="store", type=str,
+                                  help="remove characters from output")
+
 
 timestamp_group = parser.add_mutually_exclusive_group()
 timestamp_group.add_argument("-t", "--timestamp", action="store_true",
@@ -172,7 +177,10 @@ try:
             if args.hex:
                 hexdump.hexdump(s)
             else:
-                print(s),
+                if args.remove:
+                    print("".join(c for c in s if c not in args.remove)),
+                else:
+                    print(s),
             sys.stdout.flush()
 
 

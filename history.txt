@@ -1,2 +1,3 @@
+2019 11 19 Version 1.1.0  added option to remove unwanted characters from output
 2019 11 12 Version 1.0.1  made incompatible command line arguments mutually exclusive
 2019 11 12 Version 1.0.0  initial Version
