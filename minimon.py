@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-VERSION = "1.1.0"
+VERSION = "1.2.0"
 
 import serial
 import serial.tools.list_ports as list_ports
@@ -80,6 +80,8 @@ output_control_group.add_argument("-x", "--hex", action="store_true",
                                   help="hexdump mode")
 output_control_group.add_argument("-r", "--remove", action="store", type=str,
                                   help="remove characters from output")
+output_control_group.add_argument("-r0", "--remove_0", action="store", type=str,
+                                  help="remove characters from output and remove 0")
 
 
 timestamp_group = parser.add_mutually_exclusive_group()
@@ -142,6 +144,9 @@ if args.PortPattern:
 else:
     port = args.port
 
+blacklist = args.remove
+if args.remove_0:
+    blacklist = args.remove_0 + "\x00"
 
 now = lambda: False
 if args.timestamp:
@@ -177,8 +182,8 @@ try:
             if args.hex:
                 hexdump.hexdump(s)
             else:
-                if args.remove:
-                    print("".join(c for c in s if c not in args.remove)),
+                if blacklist:
+                    print("".join(c for c in s if c not in blacklist)),
                 else:
                     print(s),
             sys.stdout.flush()
