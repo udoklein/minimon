@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-VERSION = "1.2.1"
+VERSION = "1.3.0"
 
 import serial
 import serial.tools.list_ports as list_ports
@@ -83,6 +83,10 @@ output_control_group.add_argument("-r", "--remove", action="store", type=str,
 output_control_group.add_argument("-r0", "--remove_0", action="store", type=str, default = False, nargs="?",
                                   help="remove characters from output and remove 0")
 
+parser.add_argument("-sb", "--skip_bytes", type=int, default=0,
+                     help="skip bytes after startup")
+parser.add_argument("-sl", "--skip_lines", type=int, default=0,
+                     help="skip lines after startup")
 
 timestamp_group = parser.add_mutually_exclusive_group()
 timestamp_group.add_argument("-t", "--timestamp", action="store_true",
@@ -165,8 +169,16 @@ try:
         time.sleep(0.25)
         ser.setDTR(0)
 
+
     def read(queue):
         try:
+            if args.skip_bytes > 0:
+                ser.read(args.skip_bytes)
+
+            if args.skip_lines > 0:
+                for l in xrange(0, args.skip_lines):
+                    ser.readline()
+
             while True:
                 s = ser.read(16) if args.hex else ser.readline()
                 queue.put((s, now()))
@@ -191,15 +203,19 @@ try:
 
     queue = Queue.Queue()
 
+    # read in a separate thread such that blocked output will not stop reading
+    # in particular such that blocked output will not mess up timestamps
     thread = threading.Thread(target=write, args=[queue])
     thread.daemon = True
     thread.start()
 
+    # output in a separate thread as well such that we can handle user input in
+    # the main process
     thread = threading.Thread(target=read, args=[queue])
     thread.daemon = True
     thread.start()
 
-
+    # main thread: handle user input
     newline_suffix = {
         "pass": None,
         "cr":   "\r",
