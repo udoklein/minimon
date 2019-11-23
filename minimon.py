@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
+
 LICENSE = """
 Copyright 2019 Udo Klein - http://www.blinkenlight.net
 
@@ -18,7 +20,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-VERSION = "1.3.0"
+VERSION = "1.3.1"
 
 import serial
 import serial.tools.list_ports as list_ports
@@ -30,6 +32,9 @@ import hexdump
 import threading
 import os
 import Queue
+
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
 
 # proper handling of pipe failure during output
 # https://stackoverflow.com/questions/14207708/ioerror-errno-32-broken-pipe-python
@@ -108,14 +113,14 @@ parser.add_argument("-v", "--verbose", action="store_true",
 def show_ports(long):
     ports = [Port(path, description.strip(), hardware) for path, description, hardware in list_ports.comports() if long or hardware != "n/a"]
     for port in ports:
-        print "{path} ({description}, {hardware})".format(**port._asdict())
-    print
+        print("{path} ({description}, {hardware})".format(**port._asdict()))
+    print()
 
 early_exit = False
 args = parser.parse_args()
 
 if args.verbose:
-    print args
+    eprint(args)
 
 if args.List:
     show_ports(long=True)
@@ -126,13 +131,13 @@ if args.list:
     early_exit = True
 
 if args.license:
-    print LICENSE
+    eprint(LICENSE)
     early_exit = True
 
 if args.version:
-    print os.path.basename(__file__), "running as", sys.argv[0]
-    print "Version: ",
-    print VERSION
+    eprint(os.path.basename(__file__), "running as", sys.argv[0])
+    eprint("Version: ",)
+    eprint(VERSION)
     early_exit = True
 
 if early_exit:
@@ -143,7 +148,7 @@ if args.PortPattern:
     pattern = re.compile(args.PortPattern)
     port, = [port.path for port in ports if pattern.search(port.path)] or [None]
     if not port:
-        print "no port found for pattern {0}".format(args.PortPattern)
+        eprint("no port found for pattern {0}".format(args.PortPattern))
         sys.exit(-1)
 else:
     port = args.port
@@ -183,21 +188,21 @@ try:
                 s = ser.read(16) if args.hex else ser.readline()
                 queue.put((s, now()))
         except serial.SerialException as ex:
-            print ex
+            eprint(ex)
             os._exit(1)
 
     def write(queue):
         while True:
             s, now = queue.get()
             if now:
-                print now,
+                print(now, end=" ")
             if args.hex:
                 hexdump.hexdump(s)
             else:
                 if blacklist:
-                    print("".join(c for c in s if c not in blacklist)),
+                    print("".join(c for c in s if c not in blacklist), end="")
                 else:
-                    print(s),
+                    print(s, end="")
             sys.stdout.flush()
 
 
@@ -229,7 +234,7 @@ try:
         ser.write(cooked_line)
 
 except IOError as ex:
-    print ex
+    eprint(ex)
     os._exit(1)
 except KeyboardInterrupt:
     sys.exit()
