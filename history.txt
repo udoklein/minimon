@@ -1,3 +1,4 @@
+2019 12 07 Version 1.3.2  improved exit handling
 2019 11 19 Version 1.3.1  put diagnostic messages into stderr instead of stdin
 2019 11 19 Version 1.3.0  allow to skip bytes or lines after startup
 2019 11 19 Version 1.2.1  allow to only remove 0x00 from output without supplying an empty string

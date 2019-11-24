@@ -20,7 +20,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-VERSION = "1.3.1"
+VERSION = "1.3.2"
 
 import serial
 import serial.tools.list_ports as list_ports
@@ -33,17 +33,17 @@ import threading
 import os
 import Queue
 
-def eprint(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
-
-# proper handling of pipe failure during output
-# https://stackoverflow.com/questions/14207708/ioerror-errno-32-broken-pipe-python
-from signal import signal, SIGPIPE, SIG_DFL
-signal(SIGPIPE, SIG_DFL)
-
 Port = collections.namedtuple("Port", ["path", "description", "hardware"])
 default_port = Port("/dev/ttyUSB0", "USB0", "unknown hardware")
 default_baudrate = 57600
+
+# https://stackoverflow.com/questions/5574702/how-to-print-to-stderr-in-python
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
+# https://stackoverflow.com/questions/14207708/ioerror-errno-32-broken-pipe-python
+from signal import signal, SIGPIPE, SIG_DFL
+signal(SIGPIPE, SIG_DFL)
 
 # determine "interesting" serial ports
 # that is ports with a hardware description
@@ -57,17 +57,17 @@ parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFo
                                  description="Simple serial port monitor")
 
 parser.add_argument("-V", "--version", action="store_true",
-                    help="version")
+                    help="print version and exit")
 
 parser.add_argument("--license", action="store_true",
-                    help="license")
+                    help="print license and exit")
 
 port_group = parser.add_mutually_exclusive_group()
 port_group.add_argument("-p", "--port", type=str, default=default_port.path,
                     help="port")
 
 port_group.add_argument("-pp", "-P", "--PortPattern", type=str,
-                    help="grep for portname")
+                        help="grep for portname")
 
 parser.add_argument("-b", "--baudrate", type=int, default=default_baudrate,
                     help="baudrate")
@@ -85,7 +85,7 @@ output_control_group.add_argument("-x", "--hex", action="store_true",
                                   help="hexdump mode")
 output_control_group.add_argument("-r", "--remove", action="store", type=str,
                                   help="remove characters from output")
-output_control_group.add_argument("-r0", "--remove_0", action="store", type=str, default = False, nargs="?",
+output_control_group.add_argument("-r0", "--remove_0", action="store", type=str, default=False, nargs="?",
                                   help="remove characters from output and remove 0")
 
 parser.add_argument("-sb", "--skip_bytes", type=int, default=0,
@@ -136,12 +136,11 @@ if args.license:
 
 if args.version:
     eprint(os.path.basename(__file__), "running as", sys.argv[0])
-    eprint("Version: ",)
-    eprint(VERSION)
+    eprint("Version: ", VERSION)
     early_exit = True
 
 if early_exit:
-    sys.exit()
+    sys.exit(0)
 
 if args.PortPattern:
     import re
@@ -149,13 +148,13 @@ if args.PortPattern:
     port, = [port.path for port in ports if pattern.search(port.path)] or [None]
     if not port:
         eprint("no port found for pattern {0}".format(args.PortPattern))
-        sys.exit(-1)
+        sys.exit(1)
 else:
     port = args.port
 
 blacklist = args.remove
-if args.remove_0 != False:                       # Notice that an empty argument would set remove_0 to None
-    blacklist = (args.remove_0 or "" ) + "\x00"  # None can not be concatenated
+if args.remove_0 != False:                      # Notice that an empty argument would set remove_0 to None
+    blacklist = (args.remove_0 or "") + "\x00"  # None can not be concatenated
 
 now = lambda: False
 if args.timestamp:
@@ -181,7 +180,7 @@ try:
                 ser.read(args.skip_bytes)
 
             if args.skip_lines > 0:
-                for l in xrange(0, args.skip_lines):
+                for dummy in xrange(0, args.skip_lines):
                     ser.readline()
 
             while True:
@@ -189,7 +188,7 @@ try:
                 queue.put((s, now()))
         except serial.SerialException as ex:
             eprint(ex)
-            os._exit(1)
+            sys.exit(1)
 
     def write(queue):
         while True:
@@ -235,6 +234,6 @@ try:
 
 except IOError as ex:
     eprint(ex)
-    os._exit(1)
+    sys.exit(1)
 except KeyboardInterrupt:
-    sys.exit()
+    sys.exit(130)
